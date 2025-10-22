@@ -32,4 +32,5 @@ jobs:
         run: ls -R
 
       - name: Build with Maven
-        run: cd todoapp-swe451; mvn clean install
+        run: mvn clean install
+        working-directory: ./todoapp-swe451
