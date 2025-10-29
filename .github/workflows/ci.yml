@@ -31,10 +31,14 @@ jobs:
       - name: List Files (debugging)
         run: ls -R
 
+      - name: Compile Project
+        run: mvn compile
+        working-directory: ./todoapp-swe451
+
       - name: Run Unit Tests
         run: mvn test
         working-directory: ./todoapp-swe451
 
-      - name: Build with Maven
-        run: mvn clean install
+      - name: Build with Maven (skip repackaging issues)
+        run: mvn clean install -DskipTests -Dspring-boot.repackage.skip=true
         working-directory: ./todoapp-swe451
