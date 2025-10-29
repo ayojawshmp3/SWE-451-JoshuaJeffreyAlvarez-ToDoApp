@@ -42,3 +42,37 @@ jobs:
       - name: Build with Maven (skip repackaging issues)
         run: mvn clean install -DskipTests -Dspring-boot.repackage.skip=true
         working-directory: ./todoapp-swe451
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: todoapp-jar
+          path: ./todoapp-swe451/target/*.jar
+
+        deploy:
+          needs: build-and-test
+          runs-on: ubuntu-latest
+
+          steps:
+          - name: Download Artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: todoapp-jar
+              path: ./deploy
+
+          - name:
+            run: |
+              echo "EC2 HOST: ${{ secrets.EC2_Host }}
+
+          - name: Set up SSH
+            run: |
+              mkdir -p ~/.ssh
+              echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+              chmod 600 ~/.ssh/id_rsa
+              ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+    
+          - name: Deploy JAR to EC2
+            run: |
+              scp ./deploy/*.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/todoapp-swe451/todoapp.jar
+              ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "pkill -f 'java -jar' || true && nohup java -jar /home/${{ secrets.EC2_USER }}/todoapp-swe451/todoapp.jar > /home/${{ secrets.EC2_USER }}/todoapp/app.log 2>&1 &"
+    
